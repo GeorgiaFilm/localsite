@@ -572,6 +572,40 @@ function addIcons(dp,map,map2) {
         marker.setRadius(markerRadius(1,map));
       }
     });
+
+
+    //if (map.getZoom() === 15)  {
+    //alert(map.getZoom()) 
+    
+    // NOTE - This will get called for each layer
+    //alert("zoomed"); // Occurs twice
+    var elements = document.getElementsByClassName('l-icon-material');
+    for (var i=0, max=elements.length; i < max; i++) {
+      //elements[i].style.backgroundColor = "transparent"; // "rgba(0, 0, 0, 0)";
+
+      if (map.getZoom() >= 9)  {
+        elements[i].style.marginTop = "-42px"; // Move circle to default when mappoint shape displayed.
+        elements[i].childNodes[0].style.opacity = 1; // The path within SVG. Show mappoint shape around circle with icon. Undoes custom hide in leaflet.icon-material.js line 57.
+      } else {
+        elements[i].style.marginTop = "-14px"; // Move circle down when mappoint shape not displayed.
+        elements[i].childNodes[0].style.opacity = 0;
+      }
+      //elements[i].child.style.opacity = 1;
+      // path.setAttribute('opacity', 0);
+
+      //elements[i].style.fillOpacity = 0;
+      //elements[i].style.opacity = 0; // works
+      //elements[i].style.width      = 6; // works sorta - crops
+
+      //elements[i].style.display = "none"; // works
+      //elements[i].style.width      = 16;
+      //elements[i].style.height     = 20;
+      //elements[i].style.marginLeft = 8;
+      //elements[i].style.marginTop  = 22;
+    }
+    
+
+
   });
   map2.on('zoomend', function() { // zoomend
     // Resize the circle to avoid large circles on close-ups
@@ -693,14 +727,22 @@ function changeCat(catTitle) {
 // MAP 1
 // var map1 = {};
 var showprevious = param["show"];
-function loadMap1(dp) { // Also called by map-filters.js
+
+function loadMap1(show, dp) { // Also called by map-filters.js
+
   console.log('loadMap1');
-  if (param["show"] != showprevious) {
+  if (!show) {
+    show = param["show"];
+  }
+  if (!show && param["go"]) {
+    show = param["go"].toLowerCase();
+  }
+  if (show != showprevious) {
     changeCat(""); // Clear side
   }
   // To do: limit to when layer changes
   $(".layerclass").hide(); // Hides suppliers, and other layer-specific css
-
+  //alert("show: " + show);
   // Note: light_nolabels does not work on https. Remove if so. Was positron_light_nolabels.
   var basemaps1 = {
     //'Grayscale' : L.tileLayer(mbUrl, {id: 'mapbox.light', attribution: mbAttr}), // No longer works, may require registration change.
@@ -764,7 +806,8 @@ function loadMap1(dp) { // Also called by map-filters.js
   let community_root = dual_map.community_data_root();
   //let state_root = "/georgia-data/";
   //let state_root = dual_map.custom_data_root();
-  let state_abbreviation = "ga";
+  let state_abbreviation = param.state || "GA";
+
   let dp1 = {}
   // Might use when height it 280px
   dp1.latitude = 31.6074;
@@ -776,13 +819,13 @@ function loadMap1(dp) { // Also called by map-filters.js
   dp1.zoom = 7;
   dp1.listLocation = false; // Hides Waze direction link in list, remains in popup.
 
-  $("." + param["show"]).show(); // Show layer's divs, after hiding all layer-specific above.
+  $("." + show).show(); // Show layer's divs, after hiding all layer-specific above.
   $(".headerOffset2").height($("#filterFieldsHolder").height() + "px"); // Adjust incase reveal/hide changes height.
 
   //if (dp && dp[0]) { // Parameters set in page or layer json
   if (dp && dp.dataset) { // Parameters set in page or layer json
     dp1 = dp;
-  } else if (param["show"] == "smart" || param["data"] == "smart") { // param["data"] for legacy: https://www.georgia.org/smart-mobility
+  } else if (show == "smart" || param["data"] == "smart") { // param["data"] for legacy: https://www.georgia.org/smart-mobility
     dp1.listTitle = "Data Driven Decision Making";
     dp1.listSubtitle = "Smart & Sustainable Movement of Goods & Services";
     // Green Locations offer <span style="white-space: nowrap">prepared food<br>Please call ahead to arrange pickup or delivery</span>
@@ -807,7 +850,7 @@ function loadMap1(dp) { // Also called by map-filters.js
     dp1.markerType = "google";
      
 
-  } else if (param["show"] == "logistics") { // "http://" + param["domain"]
+  } else if (show == "logistics") { // "http://" + param["domain"]
 
     dp1.listTitle = "Logistics";
 
@@ -834,13 +877,13 @@ function loadMap1(dp) { // Also called by map-filters.js
 
     dp1.listLocation = false;
     dp1.addLink = "https://www.georgia.org/covid19response"; // Not yet used
-  } else if (param["show"] == "suppliers") { // "http://" + param["domain"]
+  } else if (show == "suppliers" || show == "ppe") { // "http://" + param["domain"]
 
     dp1.listTitle = "Georgia COVID-19 Response";
     dp1.listTitle = "Georgia Suppliers of&nbsp;Critical Items <span style='white-space:nowrap'>to Fight COVID-19</span>"; // For iFrame site
 
-    dp1.listInfo = "Select a category to the left to filter results. View&nbsp;<a href='https://www.georgia.org/sites/default/files/2020-10/ga_suppliers_list_10-21-2020.pdf' target='_parent'>PDF&nbsp;version</a>&nbsp;of&nbsp;the&nbsp;complete&nbsp;list.";
-    dp1.dataset = "https://map.georgia.org/display/products/suppliers/us_ga_suppliers_ppe_2020_10_21.csv";
+    dp1.listInfo = "Select a category to the left to filter results. View&nbsp;<a href='https://www.georgia.org/sites/default/files/2020-11/ga_suppliers_list_11-5-2020.pdf' target='_parent'>PDF&nbsp;version</a>&nbsp;of&nbsp;the&nbsp;complete&nbsp;list.";
+    dp1.dataset = "https://map.georgia.org/display/products/suppliers/us_ga_suppliers_ppe_2020_11_05.csv";
     //dp1.dataset = "/display/products/suppliers/us_ga_suppliers_ppe_2020_06_17.csv";
 
     dp1.dataTitle = "Manufacturers and Distributors";
@@ -866,7 +909,7 @@ function loadMap1(dp) { // Also called by map-filters.js
     dp1.listLocation = false;
     dp1.addLink = "https://www.georgia.org/covid19response"; // Not yet used
 
-  } else if (param["show"] == "restaurants") {
+  } else if (show == "restaurants") {
     // Fulton County 5631 restaurants
     
     dp1 = {};
@@ -892,7 +935,7 @@ function loadMap1(dp) { // Also called by map-filters.js
     dp1.dataTitle = "Restaurant Scores";
     dp1.titleColumn = "restaurant";
     dp1.listInfo = "Fulton County";
-  } else if (param["show"] == "pickup") {
+  } else if (show == "pickup") {
     // Atlanta Pickup
     dp1.latitude = 33.76;
     dp1.longitude = -84.3880;
@@ -914,13 +957,13 @@ function loadMap1(dp) { // Also called by map-filters.js
     dp1.valueColumn = "Delivery";
     dp1.listLocation = true;
 
-  } else if (param["show"] == "farmfresh") {
+  } else if (show == "farmfresh") {
     dp1.listTitle = "USDA Farm Produce";
     //if (location.host.indexOf('localhost') >= 0) {
       dp1.valueColumn = "type";
       dp1.valueColumnLabel = "Type"; // was: Prepared Food
       //dp1.dataset = "../../../community/farmfresh/scraper/out/states/ga/markets.csv";
-      dp1.dataset = "https://model.earth/community-data/us/state/" + state_abbreviation.toUpperCase() + "/" + state_abbreviation + "-farmfresh.csv";
+      dp1.dataset = "https://model.earth/community-data/us/state/" + state_abbreviation.toUpperCase() + "/" + state_abbreviation.toLowerCase() + "-farmfresh.csv";
     //} else {
     //  // Older data
     //  dp1.valueColumn = "Prepared";
@@ -940,7 +983,7 @@ function loadMap1(dp) { // Also called by map-filters.js
 
     dp1.addlisting = "https://www.ams.usda.gov/services/local-regional/food-directories-update";
     // community/farmfresh/ 
-    dp1.listInfo = "Farmers markets and local farms providing fresh produce directly to consumers. You can help keep this data current. <a style='white-space: nowrap' href='https://model.earth/community/farmfresh/ga/'>Learn about data</a> and <a href='https://www.ams.usda.gov/local-food-directories/farmersmarkets'>submit updates</a>";
+    dp1.listInfo = "Farmers markets and local farms providing fresh produce directly to consumers. <a style='white-space: nowrap' href='https://model.earth/community/farmfresh/ga/'>About data</a> | <a href='https://www.ams.usda.gov/local-food-directories/farmersmarkets'>submit updates</a>";
   }
 
   // Load the map using settings above
@@ -962,7 +1005,7 @@ function loadMap1(dp) { // Also called by map-filters.js
       left: 0
     });
   }
-  showprevious = param["show"];
+  showprevious = show;
 }
 
 
@@ -1524,6 +1567,7 @@ function popMapPoint(dp, map, latitude, longitude, name) {
     }
   }
 }
+
 // Scales: http://d3indepth.com/scales/
 function getScale(data, scaleType, valueCol) {
   var scale;
